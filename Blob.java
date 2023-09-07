@@ -5,12 +5,27 @@ import java.security.NoSuchAlgorithmException;
 import java.io.InputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.nio.file.*;
 
 public class Blob 
 {
+    public static void main(String[] args) {
+        String inputFile = "1-1000.txt";
+        String outputFolder = "objects";
+
+        try {
+            String hash = Blob.createBlob(inputFile);
+            System.out.println("SHA-1 Hash: " + hash);
+            System.out.println("Blob file created in " + outputFolder);
+            Index index = new Index ();
+            index.initProject(inputFile);
+            index.createBlobs (inputFile, hash);
+            System.out.println (index.getBlobMap().keySet());
+        } catch (IOException | NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            System.err.println("An error occurred: " + e.getMessage());
+        }
+    }
     
     public static String calculateSHA1(String filePath) throws IOException, NoSuchAlgorithmException {
         MessageDigest sha1Digest = MessageDigest.getInstance("SHA-1");
