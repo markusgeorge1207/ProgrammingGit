@@ -9,9 +9,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.nio.file.*;
 
-public class Blob 
-{
-    
+public class Blob {
+
     public static String calculateSHA1(String filePath) throws IOException, NoSuchAlgorithmException {
         MessageDigest sha1Digest = MessageDigest.getInstance("SHA-1");
         try (InputStream fileInputStream = new FileInputStream(filePath)) {
@@ -33,34 +32,31 @@ public class Blob
 
         return hexString.toString();
     }
-    public static byte[] readFile (String inputFile) throws IOException
-    {
+
+    public static byte[] readFile(String inputFile) throws IOException {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
 
-        try (FileInputStream files = new FileInputStream (inputFile))
-        {
-            byte [] br = new byte [1024];
+        try (FileInputStream files = new FileInputStream(inputFile)) {
+            byte[] br = new byte[1024];
             int bytesRead;
-            while ((bytesRead = files.read(br)) != -1)
-            {
-                bytes.write (br, 0, bytesRead);
+            while ((bytesRead = files.read(br)) != -1) {
+                bytes.write(br, 0, bytesRead);
             }
         }
         return bytes.toByteArray();
     }
-public static String createBlob (String inputFile) throws IOException, NoSuchAlgorithmException
-{
-byte [] data = readFile (inputFile);
-String hash = calculateSHA1(new String (data));
 
-File folder = new File ("objects");
+    public static String createBlob(String inputFile) throws IOException, NoSuchAlgorithmException {
+        byte[] data = readFile(inputFile);
+        String hash = calculateSHA1(new String(data));
 
-if (!folder.exists())
-{
-    folder.mkdir();
-}
-String outputFile = "objects" + File.separator + hash;
-Files.write (Paths.get (outputFile), data);
-    return hash;
-}
+        File folder = new File("objects");
+
+        if (!folder.exists()) {
+            folder.mkdir();
+        }
+        String outputFile = "objects" + File.separator + hash;
+        Files.write(Paths.get(outputFile), data);
+        return hash;
+    }
 }
