@@ -1,6 +1,8 @@
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -52,7 +54,12 @@ public class CommitTest {
     }
 
     @Test
-    void testGetDate() {
+    void testGetDate() throws IOException {
+        Calendar cal = Calendar.getInstance();
+        Commit commit = new Commit("test author", "summary");
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        assertEquals("Corect date", commit.getDate(), sdf.format(cal.getTime()));
 
     }
 
