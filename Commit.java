@@ -1,3 +1,8 @@
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
@@ -26,6 +31,45 @@ public class Commit {
         shaOfTreeObject = createTree();
         this.author = author;
         this.summary = summary;
+    }
+
+    public void saveCommit() throws IOException {
+        FileWriter fw = new FileWriter(new File("objects/" + generateSha1()));
+
+        fw.write(shaOfTreeObject + "\n");
+        fw.write(shaOfPreviousCommit + "\n");
+        fw.write(shaOfNextCommit + "\n");
+        fw.write(author + "\n");
+        fw.write(getDate() + "\n");
+        fw.write(summary + "\n");
+
+        fw.close();
+
+        if (!shaOfPreviousCommit.isEmpty()) {
+            changeNextCommitOfPreviousCommit();
+        }
+    }
+
+    public void changeNextCommitOfPreviousCommit() throws IOException {
+        File inputFile = new File("objects/" + shaOfPreviousCommit);
+        File tempFile = new File("__temp__");
+
+        BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+        BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
+
+        String currentLine;
+        int i = 0;
+
+        while ((currentLine = reader.readLine()) != null) {
+            if (i == 2) {
+                writer.write(generateSha1() + "\n");
+            } else {
+                writer.write(currentLine + "\n");
+            }
+        }
+        writer.close();
+        reader.close();
+        tempFile.renameTo(inputFile);
     }
 
     public String createTree() throws IOException {
