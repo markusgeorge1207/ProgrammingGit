@@ -1,4 +1,5 @@
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -10,14 +11,27 @@ public class TestUtils {
         Files.createDirectories(Paths.get("objects/"));
     }
 
-    public static void main(String[] args) throws IOException {
-        TestUtils.initialize();
-        Tree tree = new Tree();
+    public static void writeStringToFile(String path, String contents) throws IOException {
+        FileWriter fw = new FileWriter(path, false);
+        fw.write(contents);
+        fw.close();
+    }
 
-        Commit commit = new Commit("samskulsky", "This is a test");
-        commit.saveCommit();
+    public static void deleteFile(String path) {
+        File file = new File(path);
+        file.delete();
+    }
 
-        Commit commit2 = new Commit("128b3bf909a02dea713c89f88c6cfa5c2d0a47ae", "samskulsky", "This is dasd a test");
-        commit2.saveCommit();
+    public static void deleteDirectory(String path) {
+        File file = new File(path);
+        File[] contents = file.listFiles();
+        if (contents != null) {
+            for (File f : contents) {
+                if (!Files.isSymbolicLink(f.toPath())) {
+                    deleteDirectory(f.getPath());
+                }
+            }
+        }
+        file.delete();
     }
 }
