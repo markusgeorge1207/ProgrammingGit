@@ -1,6 +1,9 @@
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
@@ -64,7 +67,17 @@ public class CommitTest {
     }
 
     @Test
-    void testSaveCommit() {
+    void testSaveCommit() throws IOException {
+        Commit commit = new Commit("test author", "summary");
+        commit.saveCommit();
 
+        String expectedContents = "da39a3ee5e6b4b0d3255bfef95601890afd80709\nnull\nnull\ntest author\n"
+                + commit.getDate() + "\nsummary";
+
+        Path path = Paths.get("objects/" + commit.generateSha1());
+
+        assertEquals("Incorrect file contents",
+                expectedContents,
+                Files.readString(Path.of(path.toString())));
     }
 }
