@@ -41,11 +41,11 @@ public class Commit {
         fw.write(shaOfNextCommit + "\n");
         fw.write(author + "\n");
         fw.write(getDate() + "\n");
-        fw.write(summary + "\n");
+        fw.write(summary);
 
         fw.close();
 
-        if (!shaOfPreviousCommit.isEmpty()) {
+        if (shaOfPreviousCommit != null && !shaOfPreviousCommit.isEmpty()) {
             changeNextCommitOfPreviousCommit();
         }
     }
@@ -63,9 +63,12 @@ public class Commit {
         while ((currentLine = reader.readLine()) != null) {
             if (i == 2) {
                 writer.write(generateSha1() + "\n");
-            } else {
+            } else if (i != 5) {
                 writer.write(currentLine + "\n");
+            } else {
+                writer.write(currentLine);
             }
+            i++;
         }
         writer.close();
         reader.close();
