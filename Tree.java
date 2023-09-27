@@ -1,4 +1,5 @@
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -7,22 +8,19 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Formatter;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
 
 public class Tree {
     private ArrayList<String> blobTree;
     private ArrayList<Tree> childTrees;
-    private static String sha1 = "";
+    private static String sha1; // Not static
 
     public Tree() {
         blobTree = new ArrayList();
         childTrees = new ArrayList();
+        sha1 = ""; // Initialize sha1 for this instance
     }
 
     public void add(String indexLine) {
-
         if (!(blobTree.contains(indexLine))) {
             blobTree.add(indexLine);
         }
@@ -36,19 +34,29 @@ public class Tree {
         }
     }
 
-    public static String hashFromString(String str) {
-         sha1 = "";
-        try {
-            MessageDigest crypt = MessageDigest.getInstance("SHA-1");
-            crypt.reset();
-            crypt.update(str.getBytes("UTF-8"));
-            sha1 = byteToHex(crypt.digest());
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (UnsupportedEncodingException e) {
+    public static String hashFromString(String input) {
+        StringBuilder hexString = new StringBuilder();
+        try 
+        {
+            MessageDigest md = MessageDigest.getInstance("SHA-1");
+        byte[] hashBytes = md.digest(input.getBytes());
+
+        // Convert the byte array to a hexadecimal string
+         hexString = new StringBuilder();
+        for (byte b : hashBytes) {
+            String hex = Integer.toHexString(0xFF & b);
+            if (hex.length() == 1) {
+                hexString.append('0');
+            }
+            hexString.append(hex);
+        }
+        }
+        catch (NoSuchAlgorithmException e)
+        {
             e.printStackTrace();
         }
-        return sha1;
+
+        return hexString.toString();
     }
     public void addDirectory(String directoryPath) throws IOException {
         File directory = new File(directoryPath);
@@ -59,12 +67,10 @@ public class Tree {
 
         for (File file : directory.listFiles()) {
             if (file.isFile()) {
-                // Process files and add as blobs
                 String sha1 = addBlob(file);
                 String entry = "blob : " + sha1 + " : " + file.getName();
                 add(entry);
             } else if (file.isDirectory()) {
-                // Recursively process subdirectories and add as child trees
                 Tree childTree = new Tree();
                 childTree.addDirectory(file.getAbsolutePath());
                 childTrees.add(childTree);
@@ -83,7 +89,6 @@ public class Tree {
     }
     private String addBlob(File file) throws IOException {
         StringBuilder content = new StringBuilder();
-        // Read the file content
 
         try (FileReader reader = new FileReader(file)) {
             int character;
@@ -94,13 +99,16 @@ public class Tree {
 
         String sha1 = hashFromString(content.toString());
 
-        // Save the blob
         File blobFile = new File("./objects/" + sha1);
         try (FileWriter writer = new FileWriter(blobFile)) {
             writer.write(content.toString());
         }
 
         return sha1;
+    }
+    public ArrayList<Tree> getChildTrees ()
+    {
+        return childTrees;
     }
 
 

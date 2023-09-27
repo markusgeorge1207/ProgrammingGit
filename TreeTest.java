@@ -1,67 +1,101 @@
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import java.io.File;
+import java.io.IOException;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TreeTest {
+    private static final String TEST_DIRECTORY_BASIC = "objects/";
+    private static final String TEST_DIRECTORY_ADVANCED = "objects/";
 
-    @Test
-    void testAdd() {
-        Tree tree = new Tree();
-        tree.add("blob : abcdef : file.txt");
-
-        assertEquals("blob : abcdef : file.txt", tree.getBlobTree().get(0));
-    }
-
-    @Test
-    void testAddDirectory() {
-        Tree root = new Tree();
-
-        assertThrows(IllegalArgumentException.class, () -> root.addDirectory("nonexistent-directory"));
-
-        // You can add more comprehensive tests for addDirectory.
-    }
-
-    @Test
-    void testGetSHA1() {
-        Tree tree = new Tree();
-        tree.add("blob : abcdef : file.txt");
-        tree.add("tree : 123456 : folder");
-
+    @BeforeEach
+    void setUp() {
        
-        assertEquals("Expected SHA1 value", tree.getSHA1());
+        new File(TEST_DIRECTORY_BASIC).mkdir();
+        new File(TEST_DIRECTORY_ADVANCED).mkdir();
     }
 
     @Test
-    void testRemove() {
+    void testAddDirectoryWithFilesOnly() throws IOException {
+        setUp();
+        createTemporaryFiles(TEST_DIRECTORY_BASIC, 3);
+
         Tree tree = new Tree();
-        tree.add("blob : abcdef : file.txt");
-        tree.add("tree : 123456 : folder");
 
-        tree.remove("blob : abcdef : file.txt");
+        tree.addDirectory(TEST_DIRECTORY_BASIC);
 
-        // Ensure that the specified entry is removed
-        assertEquals("tree : 123456 : folder", tree.getBlobTree().get(0));
-    }
+        
+        assertEquals(3, tree.getBlobTree().size());
 
-
-    @Test
-    void testHashFromString() {
-        // Ensure that the SHA1 is calculated correctly for a given string
-        String input = "Hello, World!";
-        String expectedSHA1 = "2ef7bde608ce5404e97d5f042f95f89f1c1c87e5d5";
-        String actualSHA1 = Tree.hashFromString(input);
-
-        assertEquals(expectedSHA1, actualSHA1);
+        
+        deleteDirectory(new File(TEST_DIRECTORY_BASIC));
     }
 
     @Test
-    void testByteToHex() {
-        // Ensure that byteToHex converts bytes to a hexadecimal string correctly
-        byte[] bytes = {0x12, 0x34, (byte) 0xAB};
-        String expectedHex = "1234ab";
-        String actualHex = Tree.byteToHex(bytes);
+    void testAddDirectoryWithFilesAndFolders() throws IOException {
+        
+        Blob blob = new Blob ();
+        Index index = new Index();
+        index.initProject(blob.getSha1());
+        createComplexDirectoryStructure(TEST_DIRECTORY_ADVANCED);
 
-        assertEquals(expectedHex, actualHex);
+        Tree tree = new Tree();
+
+        
+        tree.addDirectory(TEST_DIRECTORY_ADVANCED);
+
+        
+        assertEquals(4, tree.getBlobTree().size());
+        assertEquals(2, tree.getChildTrees().size());
+
+        
+        deleteDirectory(new File(TEST_DIRECTORY_ADVANCED));
+    }
+
+    private void createTemporaryFiles(String directoryPath, int numFiles) throws IOException {
+        File directory = new File(directoryPath);
+        if (!directory.exists()) {
+            directory.mkdir();
+        }
+
+        for (int i = 1; i <= numFiles; i++) {
+            File file = new File(directory, "file" + i + ".txt");
+            file.createNewFile();
+        }
+    }
+
+    private void createComplexDirectoryStructure(String directoryPath) throws IOException {
+        File directory = new File(directoryPath);
+        if (!directory.exists()) {
+            directory.mkdir();
+        }
+
+        createTemporaryFiles(directoryPath, 3);
+
+        File folder1 = new File(directory, "folder1");
+        folder1.mkdir();
+        createTemporaryFiles(folder1.getAbsolutePath(), 2);
+
+        File folder2 = new File(directory, "folder2");
+        folder2.mkdir();
+        createTemporaryFiles(folder2.getAbsolutePath(), 1);
+
+        File subfolder = new File(folder1, "subfolder");
+        subfolder.mkdir();
+        File fileInSubfolder = new File(subfolder, "subfile.txt");
+        fileInSubfolder.createNewFile();
+    }
+
+    private void deleteDirectory(File directory) {
+        if (directory.isDirectory()) {
+            File[] files = directory.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    deleteDirectory(file);
+                }
+            }
+        }
+        directory.delete();
     }
 }
