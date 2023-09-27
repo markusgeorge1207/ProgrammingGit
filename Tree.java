@@ -12,12 +12,12 @@ import java.util.Formatter;
 public class Tree {
     private ArrayList<String> blobTree;
     private ArrayList<Tree> childTrees;
-    private static String sha1; // Not static
+    private String sha1; 
 
     public Tree() {
         blobTree = new ArrayList();
         childTrees = new ArrayList();
-        sha1 = ""; // Initialize sha1 for this instance
+        sha1 = ""; 
     }
 
     public void add(String indexLine) {
@@ -41,7 +41,7 @@ public class Tree {
             MessageDigest md = MessageDigest.getInstance("SHA-1");
         byte[] hashBytes = md.digest(input.getBytes());
 
-        // Convert the byte array to a hexadecimal string
+        
          hexString = new StringBuilder();
         for (byte b : hashBytes) {
             String hex = Integer.toHexString(0xFF & b);
@@ -60,11 +60,11 @@ public class Tree {
     }
     public void addDirectory(String directoryPath) throws IOException {
         File directory = new File(directoryPath);
-
+    
         if (!directory.exists() || !directory.isDirectory()) {
             throw new IllegalArgumentException("Invalid directory path: " + directoryPath);
         }
-
+    
         for (File file : directory.listFiles()) {
             if (file.isFile()) {
                 String sha1 = addBlob(file);
@@ -74,15 +74,23 @@ public class Tree {
                 Tree childTree = new Tree();
                 childTree.addDirectory(file.getAbsolutePath());
                 childTrees.add(childTree);
-
-                String entry = "tree : " + childTree.getSHA1() + " : " + file.getName();
-                add(entry);
             }
         }
-
-       
+    
+        sha1 = calculateTreeSHA1();
         save();
     }
+    
+    public int calculateBlobCount() {
+        int count = blobTree.size();
+        for (Tree child : childTrees) {
+            count += child.calculateBlobCount();
+        }
+        return count;
+    }
+    
+    
+    
     public String getSHA1()
     {
         return sha1;
@@ -103,12 +111,22 @@ public class Tree {
         try (FileWriter writer = new FileWriter(blobFile)) {
             writer.write(content.toString());
         }
-
         return sha1;
     }
     public ArrayList<Tree> getChildTrees ()
     {
         return childTrees;
+    }
+    private String calculateTreeSHA1() {
+        StringBuilder treeContent = new StringBuilder();
+        for (String line : blobTree) {
+            treeContent.append(line).append("\n");
+        }
+        for (Tree child : childTrees) {
+            treeContent.append("tree : ").append(child.getSHA1()).append(" : child\n");
+        }
+
+        return hashFromString(treeContent.toString());
     }
 
 
@@ -121,6 +139,7 @@ public class Tree {
         formatter.close();
         return result;
     }
+
 
     public void save() throws IOException {
         StringBuilder sb = new StringBuilder();

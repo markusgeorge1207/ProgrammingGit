@@ -43,14 +43,14 @@ public class CommitTest {
 
     }
 
-    // Tests Tree's SHA-1
+    
     @Test
     void testCreateTree() throws IOException {
         Commit commit = new Commit("test author", "summary");
         assertEquals("Wrong Tree SHA-1", commit.createTree(), "da39a3ee5e6b4b0d3255bfef95601890afd80709");
     }
 
-    // Test's Commit's overall sha-1
+    
     @Test
     void testGenerateSha1() throws IOException {
         Commit commit = new Commit("test author", "summary");
