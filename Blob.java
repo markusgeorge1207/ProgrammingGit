@@ -5,33 +5,13 @@ import java.security.NoSuchAlgorithmException;
 import java.io.InputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.nio.file.*;
 
-<<<<<<< HEAD
-public class Blob 
-{
-    public static void main(String[] args) {
-        String inputFile = "1-1000.txt";
-        String outputFolder = "objects";
-
-        try {
-            String hash = Blob.createBlob(inputFile);
-            System.out.println("SHA-1 Hash: " + hash);
-            System.out.println("Blob file created in " + outputFolder);
-            Index index = new Index ();
-            index.initProject(inputFile);
-            index.createBlobs (inputFile, hash);
-            System.out.println (index.getBlobMap().keySet());
-        } catch (IOException | NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            System.err.println("An error occurred: " + e.getMessage());
-        }
-    }
-    
-=======
 public class Blob {
+    private static String sha1 = "";
 
->>>>>>> master
     public static String calculateSHA1(String filePath) throws IOException, NoSuchAlgorithmException {
         MessageDigest sha1Digest = MessageDigest.getInstance("SHA-1");
         try (InputStream fileInputStream = new FileInputStream(filePath)) {
@@ -51,7 +31,12 @@ public class Blob {
             hexString.append(hex);
         }
 
-        return hexString.toString();
+        sha1 = hexString.toString();
+        return sha1;
+    }
+    public String getSha1 ()
+    {
+        return sha1;
     }
 
     public static byte[] readFile(String inputFile) throws IOException {

@@ -14,9 +14,10 @@ import org.junit.jupiter.api.Test;
 public class CommitTest {
     @BeforeAll
     static void setUpBeforeClass() throws Exception {
-        TestUtils.deleteFile("index");
-        TestUtils.deleteDirectory("objects");
-        TestUtils.initialize();
+        TestUtils commitTest = new TestUtils();
+        commitTest.deleteFile("index");
+        commitTest.deleteDirectory("objects");
+        commitTest.initialize();
     }
 
     @AfterAll
