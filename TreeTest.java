@@ -1,4 +1,4 @@
-import org.junit.jupiter.api.AfterEach;  // Import the AfterEach annotation
+import org.junit.jupiter.api.AfterEach;  
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.io.File;
@@ -8,11 +8,6 @@ import static org.junit.jupiter.api.Assertions.*;
 public class TreeTest {
     private static final String basicTest = "objects/";
     private final String advancedTest = "objects/";
-
-    @BeforeEach
-    void setUp() {
-        // No need to create directories here. You can create them directly in test methods.
-    }
 
     @AfterEach
     void tearDown() {
@@ -25,7 +20,7 @@ public class TreeTest {
         new File(basicTest).mkdir();
 
         
-        createTemporaryFiles(basicTest, 3);
+        createTempFiles(basicTest, 3);
 
         Tree tree = new Tree();
 
@@ -51,7 +46,7 @@ public class TreeTest {
         assertEquals(2, tree.getChildTrees().size());
     }
 
-    private void createTemporaryFiles(String directoryPath, int numFiles) throws IOException {
+    private void createTempFiles(String directoryPath, int numFiles) throws IOException {
         File directory = new File(directoryPath);
         if (!directory.exists()) {
             directory.mkdir();
