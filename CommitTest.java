@@ -12,18 +12,20 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 public class CommitTest {
+    private static TestUtils saveCommitTest;
     @BeforeAll
     static void setUpBeforeClass() throws Exception {
         TestUtils commitTest = new TestUtils();
         commitTest.deleteFile("index");
         commitTest.deleteDirectory("objects");
         commitTest.initialize();
+        saveCommitTest = commitTest;
     }
 
     @AfterAll
     static void tearDownAfterClass() throws Exception {
-        TestUtils.deleteFile("index");
-        TestUtils.deleteDirectory("objects");
+        saveCommitTest.deleteFile("index");
+        saveCommitTest.deleteDirectory("objects");
     }
 
     // Tests byte array to hex string conversion

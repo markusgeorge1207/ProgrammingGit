@@ -8,8 +8,13 @@ import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Formatter;
+import java.io.BufferedReader;
+import java.util.Map;
+import java.util.List;
+import java.nio.file.*;
 
 public class Commit {
 
@@ -18,17 +23,18 @@ public class Commit {
     private String shaOfNextCommit;
     private String author;
     private String summary;
+    private Index content;
 
-    public Commit(String parentSha1, String author, String summary) throws IOException {
+    public Commit(String parentSha1, String author, String summary, Index index) throws IOException {
         shaOfPreviousCommit = parentSha1;
 
-        shaOfTreeObject = createTree();
+        shaOfTreeObject = createTree(index);
         this.author = author;
         this.summary = summary;
     }
 
-    public Commit(String author, String summary) throws IOException {
-        shaOfTreeObject = createTree();
+    public Commit(String author, String summary, Index index) throws IOException {
+        shaOfTreeObject = createTree(index);
         this.author = author;
         this.summary = summary;
     }
@@ -75,10 +81,80 @@ public class Commit {
         tempFile.renameTo(inputFile);
     }
 
-    public String createTree() throws IOException {
+    public String createTree(Index index) throws IOException {
         Tree tree = new Tree();
-        return tree.getSHA1();
+
+        Map <String, String> blobMap = index.getBlobMap();
+        List <Tree> treeList = index.getTreeList();
+
+        for (Map.Entry<String, String> entry : blobMap.entrySet())
+        {
+            tree.addTreeEntry ("blob",entry.getValue(), entry.getKey());
+        }
+        for (Tree dir : treeList)
+        {
+            String directoryName = dir.getFileName();
+            String treeSHA1 = dir.getSHA1();
+            tree.addTreeEntry ("tree", treeSHA1, directoryName);
+        }
+        if (shaOfPreviousCommit != null && !shaOfPreviousCommit.isEmpty())
+        {
+            tree.addTreeEntry("tree",shaOfPreviousCommit,"prev_commit");
+        }
+        index.clearIndexFile();
+        
+       return tree.calculateTreeSHA1();
     }
+
+    public String getCommitTree (String commitSHA1)
+    {
+        Path commitPath = Paths.get ("objects",commitSHA1);
+        List <String> lines = new ArrayList<>();
+        try
+        {
+           lines = Files.readAllLines (commitPath);
+    }
+    catch (IOException e)
+    {
+        e.printStackTrace();
+    }
+    if (lines.isEmpty())
+    {
+        throw new IllegalArgumentException();
+    }
+    String firstLine = lines.get(0);
+
+    String [] parts = firstLine.split (" : ");
+    if (parts.length < 2 || !parts[0].equals("tree"))
+    {
+        throw new IllegalArgumentException();
+    }
+
+    String treeSHA1 = parts[1];
+    return treeSHA1;
+}
+public void update (String prevSHA1, String newSHA1)
+{
+    Path commitPath = Paths.get("objects", prevSHA1);
+    List<String> lines = new ArrayList ();
+    try
+    {
+        lines = Files.readAllLines (commitPath);
+    }
+    catch (IOException e)
+    {
+        e.printStackTrace();
+    }
+    lines.set(2, newSHA1);
+    try
+    {
+        Files.write (commitPath, lines);
+    }
+    catch (IOException e)
+    {
+        e.printStackTrace();
+    }
+}
 
     public String generateSha1() throws IOException {
         String toEncrypt = shaOfTreeObject + "\n" + shaOfPreviousCommit + "\n" + author + "\n" + getDate() + "\n"

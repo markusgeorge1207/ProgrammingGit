@@ -1,5 +1,6 @@
 import java.io.*;
 import java.nio.file.*;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -9,9 +10,13 @@ public class Index {
 
     private String indexFile = "index";
     private Map<String, String> blobMap;
+    private ArrayList <Tree> treeList;
+    private File contentFile;
 
     public Index() {
         blobMap = new HashMap<>();
+        treeList = new ArrayList<>();
+        contentFile = new File (indexFile);
     }
 
     public boolean initProject(String indexFile) throws IOException {
@@ -24,14 +29,34 @@ public class Index {
         return false;
     }
 
-    public void createBlobs(String originalFileName, String sha1Hash) throws IOException {
-        if (initProject (originalFileName))
+    public void addBlob(String originalFileName) throws IOException {
+        String fileContents = new String (Blob.readFile(originalFileName));
+        String hash = "";
+        try
         {
-            blobMap.put(originalFileName, sha1Hash);
-            String entry = originalFileName + " : " + sha1Hash;
-        Files.write(Paths.get(indexFile), (entry + System.lineSeparator()).getBytes());
+           hash = Blob.calculateSHA1(originalFileName);
         }
+        catch (NoSuchAlgorithmException e)
+        {
+            e.printStackTrace();
+        }
+        blobMap.put (originalFileName, hash);
+        File objectsFile = new File ("objects", hash);
+        if (!objectsFile.exists())
+        {
+            try (PrintWriter pw = new PrintWriter (objectsFile))
+            {
+                pw.print(fileContents);
+            }
+        }
+        try (PrintWriter writer = new PrintWriter (new FileWriter ("Index", true)))
+        {
+            writer.println ("blob" + ": " + hash + ": " + originalFileName + "\n");
+        }
+
+        
     }
+
 
     public void removeBlobs(String originalFileName) throws IOException {
         
@@ -53,7 +78,66 @@ public class Index {
         Files.write(Paths.get(indexFile), newLines);
     }
 
+    public void addDirectory (String directoryName)
+    {
+        Tree dir = new Tree ("objects");
+        File directory = new File (directoryName);
+
+        writeDirectory (directory, dir);
+
+        treeList.add(dir);
+    }
+    public void clearIndexFile ()
+    {
+        try 
+        {
+            Files.deleteIfExists(Paths.get(indexFile));
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+
+    }
+
+    public void writeDirectory (File directory, Tree tree)
+    {
+        File[] files = directory.listFiles();
+
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    Tree subdirectoryTree = new Tree();
+                    writeDirectory(file, subdirectoryTree);
+                    tree.addTreeEntry("tree", subdirectoryTree.getSHA1(), file.getName());
+                } else if (file.isFile()) {
+                    
+                    StringBuilder content = new StringBuilder();
+                try (FileReader reader = new FileReader(file)) {
+                    int character;
+                    while ((character = reader.read()) != -1) {
+                        content.append((char) character);
+                    }
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
+                
+                String sha1 = Tree.hashFromString(content.toString());
+                
+                tree.addTreeEntry("blob", sha1, file.getName());
+                }
+            }
+        }
+    }
+
+    
     public Map<String, String> getBlobMap() {
         return blobMap;
+    }
+    public ArrayList<Tree> getTreeList ()
+    {
+        return treeList;
     }
 }

@@ -8,16 +8,30 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Formatter;
+import java.util.HashSet;
 
 public class Tree {
     private ArrayList<String> blobTree;
     private ArrayList<Tree> childTrees;
+    private HashSet<String> fileNameList;
+    private ArrayList<String> treeList;
+    private HashSet<String> sha1List;
     private String sha1; 
+    private String fileName;
 
     public Tree() {
-        blobTree = new ArrayList();
-        childTrees = new ArrayList();
+        blobTree = new ArrayList<String>();
+        childTrees = new ArrayList<Tree>();
         sha1 = ""; 
+        treeList = new ArrayList<String>();
+    }
+    public Tree (String fileName)
+    {
+        blobTree = new ArrayList<String>();
+        childTrees = new ArrayList<Tree>();
+        sha1 = ""; 
+        treeList = new ArrayList<String>();
+        this.fileName = fileName;
     }
 
     public void add(String indexLine) {
@@ -30,6 +44,7 @@ public class Tree {
         for (int i = blobTree.size() - 1; i >= 0; i--) {
             if (blobTree.get(i).contains(indexLine)) {
                 blobTree.remove(i);
+                treeList.remove (indexLine);
             }
         }
     }
@@ -58,18 +73,19 @@ public class Tree {
 
         return hexString.toString();
     }
-    public void addDirectory(String directoryPath) throws IOException {
+    public String addDirectory(String directoryPath) throws IOException {
         File directory = new File(directoryPath);
     
         if (!directory.exists() || !directory.isDirectory()) {
             throw new IllegalArgumentException("Invalid directory path: " + directoryPath);
         }
+        Tree tree = new Tree();
+        File[] files = directory.listFiles();
     
-        for (File file : directory.listFiles()) {
-            if (file.isFile()) {
-                String sha1 = addBlob(file);
-                String entry = "blob : " + sha1 + " : " + file.getName();
-                add(entry);
+        for (File file : files) {
+            if (file.isDirectory()) {
+                Tree childTree = new Tree();
+                tree.addTreeEntry("tree", childTree.addDirectory(file.getPath()), file.getName());
             } else if (file.isDirectory()) {
                 Tree childTree = new Tree();
                 childTree.addDirectory(file.getAbsolutePath());
@@ -79,14 +95,11 @@ public class Tree {
     
         sha1 = calculateTreeSHA1();
         save();
+        return tree.getSHA1();
     }
-    
-    public int calculateBlobCount() {
-        int count = blobTree.size();
-        for (Tree child : childTrees) {
-            count += child.calculateBlobCount();
-        }
-        return count;
+    public String getFileName ()
+    {
+        return fileName;
     }
     
     
@@ -117,7 +130,7 @@ public class Tree {
     {
         return childTrees;
     }
-    private String calculateTreeSHA1() {
+    public String calculateTreeSHA1() {
         StringBuilder treeContent = new StringBuilder();
         for (String line : blobTree) {
             treeContent.append(line).append("\n");
@@ -138,6 +151,27 @@ public class Tree {
         String result = formatter.toString();
         formatter.close();
         return result;
+    }
+    public void addTreeEntry(String fileType, String sha1, String fileName) {
+        if (fileType.equals("tree")) {
+            if (!treeList.contains(fileType + " : " + sha1)) {
+                if (fileName.isEmpty()) {
+                    treeList.add(fileType + " : " + sha1);
+                } else {
+                    treeList.add(fileType + " : " + sha1 + " : " + fileName);
+                    fileNameList.add(fileName);
+                }
+                sha1List.add(sha1);
+            }
+
+        }
+        else if (fileType.equals("blob")) {
+            if (!treeList.contains(fileType + " : " + sha1 + " : " + fileName)) {
+                treeList.add(fileType + " : " + sha1 + " : " + fileName);
+                fileNameList.add(fileName);
+                sha1List.add(sha1);
+            }
+        }
     }
 
 
@@ -161,5 +195,9 @@ public class Tree {
 
     public ArrayList<String> getBlobTree() {
         return blobTree;
+    }
+    public ArrayList<String> getTreeList()
+    {
+        return treeList;
     }
 }
