@@ -146,4 +146,68 @@ public class CommitTester {
             e.printStackTrace();
         }
     }
+
+
+
+    @Test
+    void testCommitWithFileDeletionsAndEdits() {
+        // Create initial commit
+        try
+        {
+        Commit initialCommit = new Commit ("Markus", "First Commit", index);
+        
+        // Commit 1: Edit file1.txt
+        index.addBlob("file2.txt");
+        index.addBlob("file3.txt");
+        index.deleteFile("file2.txt");
+        Commit commit2 = new Commit ("Markus", "2nd", index);
+        assertFalse(commit2.getCommitTree(commit2.getSHA1()).contains("file2.txt"));
+        
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    private Commit createInitialCommit() {
+        Index index = new Index();
+        try {
+            index.addBlob("file1.txt");
+            index.addBlob("file2.txt");
+            index.addBlob("file3.txt");
+            return new Commit("Initial Author", "Initial Commit", index);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private Commit createCommitWithEdits(Commit parentCommit, String... editedFiles) {
+        Index index = new Index();
+        for (String file : editedFiles) {
+            try {
+                index.addBlob(file);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        try {
+            return new Commit(parentCommit.getSHA1(), "Author", "Edit Commit", index);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private Commit createCommitWithDeletion(Commit parentCommit, String deletedFile) {
+        Index index = new Index();
+        try {
+            index.removeBlobs(deletedFile);
+            return new Commit(parentCommit.getSHA1(), "Author", "Delete Commit", index);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }

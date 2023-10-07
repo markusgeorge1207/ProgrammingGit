@@ -99,6 +99,28 @@ public class Index {
         }
 
     }
+    public void deleteFile (String fileName)
+    {
+       try (BufferedWriter writer = new BufferedWriter(new FileWriter ("index")))
+       {
+            writer.write ("*deleted* : " + fileName);
+       }
+       catch (IOException e)
+       {
+        e.printStackTrace();
+       }
+    }
+    public void editFile (String fileName)
+    {
+       try (BufferedWriter writer = new BufferedWriter(new FileWriter ("index")))
+       {
+            writer.write ("*edited* : " + fileName);
+       }
+       catch (IOException e)
+       {
+        e.printStackTrace();
+       }
+    }
 
     public void writeDirectory (File directory, Tree tree)
     {

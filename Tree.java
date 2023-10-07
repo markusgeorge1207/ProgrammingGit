@@ -1,9 +1,6 @@
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -105,29 +102,31 @@ public class Tree {
     {
         return fileName;
     }
+
+    public void handleDeletedFiles(ArrayList<String> deletedFiles)
+    {
+        blobTree.removeIf(entry -> {
+            String fileName = getFileName();
+            return deletedFiles.contains(fileName);
+        });
+    }
+    public void handleEditedFiles (ArrayList<String> editedFiles)
+    {
+        for (String entry: blobTree)
+        {
+            String fileName = getFileName();
+            if (editedFiles.contains(fileName))
+            {
+                entry = entry.replaceFirst(getSHA1(), hashFromString (entry));
+            }
+            
+        }
+    }
     
     
     
     public String getSHA1()
     {
-        return sha1;
-    }
-    private String addBlob(File file) throws IOException {
-        StringBuilder content = new StringBuilder();
-
-        try (FileReader reader = new FileReader(file)) {
-            int character;
-            while ((character = reader.read()) != -1) {
-                content.append((char) character);
-            }
-        }
-
-        String sha1 = hashFromString(content.toString());
-
-        File blobFile = new File("./objects/" + sha1);
-        try (FileWriter writer = new FileWriter(blobFile)) {
-            writer.write(content.toString());
-        }
         return sha1;
     }
     public ArrayList<Tree> getChildTrees ()
@@ -162,7 +161,7 @@ public class Tree {
                 if (fileName.isEmpty()) {
                     treeList.add(fileType + " : " + sha1);
                 } else {
-                    treeList.add(fileType + " : " + sha1 + " : " + fileName);
+                    blobTree.add(fileType + " : " + sha1 + " : " + fileName);
                     fileNameList.add(fileName);
                 }
                 sha1List.add(sha1);

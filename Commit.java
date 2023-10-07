@@ -131,6 +131,24 @@ public class Commit {
 
     public String createTree(Index index) throws IOException {
         Tree tree = new Tree();
+        ArrayList<String> deletedFiles = new ArrayList<>();
+        ArrayList<String> editedFiles = new ArrayList<>();
+
+        BufferedReader br = new BufferedReader(new FileReader ("index"));
+
+        String str = "";
+
+        while((str = br.readLine())!=null)
+        {
+            if (str.contains("*deleted"))
+            {
+                deletedFiles.add (str);
+            }
+            if (str.contains("*edited"))
+            {
+                editedFiles.add(str);
+            }
+        }
 
         Map <String, String> blobMap = index.getBlobMap();
         List <Tree> treeList = index.getTreeList();
@@ -149,6 +167,8 @@ public class Commit {
         {
             tree.addTreeEntry("tree",shaOfPreviousCommit,"prev_commit");
         }
+        tree.handleDeletedFiles(deletedFiles);
+        tree.handleEditedFiles (editedFiles);
         index.clearIndexFile();
         tree.save();
        return tree.calculateTreeSHA1();
@@ -180,6 +200,14 @@ public class Commit {
 
     String treeSHA1 = parts[1];
     return treeSHA1;
+}
+public String getSHA1 ()
+{
+    return shaOfTreeObject;
+}
+public String getSHAOfNextCommit ()
+{
+    return shaOfNextCommit;
 }
 public void update (String prevSHA1, String newSHA1)
 {
