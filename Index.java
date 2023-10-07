@@ -11,12 +11,10 @@ public class Index {
     private String indexFile = "index";
     private Map<String, String> blobMap;
     private ArrayList <Tree> treeList;
-    private File contentFile;
 
     public Index() {
         blobMap = new HashMap<>();
         treeList = new ArrayList<>();
-        contentFile = new File (indexFile);
     }
 
     public boolean initProject(String indexFile) throws IOException {

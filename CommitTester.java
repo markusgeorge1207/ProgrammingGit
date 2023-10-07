@@ -1,4 +1,6 @@
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+
 import static org.junit.jupiter.api.Assertions.*;
 import java.io.File;
 
@@ -151,7 +153,6 @@ public class CommitTester {
 
     @Test
     void testCommitWithFileDeletionsAndEdits() {
-        // Create initial commit
         try
         {
         Commit initialCommit = new Commit ("Markus", "First Commit", index);
@@ -162,9 +163,24 @@ public class CommitTester {
         index.deleteFile("file2.txt");
         Commit commit2 = new Commit ("Markus", "2nd", index);
         assertFalse(commit2.getCommitTree(commit2.getSHA1()).contains("file2.txt"));
+        index.addBlob ("file4.txt");
+        String hash = Blob.calculateSHA1("file4.txt");
+        index.editFile("file3.txt");
+        assertNotEquals (hash, Blob.calculateSHA1("file4.txt"));
+        Commit commit3 = new Commit ("Markus", "3rd", index);
+        index.addBlob ("file5.txt");
+        index.addBlob("file6.txt");
+        index.deleteFile("file5.txt");
+        index.deleteFile("file6.txt");
+        assertEquals(commit3.createTree(index), commit2.createTree(index));
+
         
         }
         catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+        catch (NoSuchAlgorithmException e)
         {
             e.printStackTrace();
         }
