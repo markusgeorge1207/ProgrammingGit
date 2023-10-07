@@ -1,5 +1,7 @@
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 import static org.junit.jupiter.api.Assertions.*;
 import java.io.File;
@@ -28,6 +30,31 @@ public class CommitTester {
         saveCommitTest.deleteFile("index");
         saveCommitTest.deleteDirectory("objects");
     }
+    @Test
+    void testByteToHex() throws IOException {
+        Commit commit = new Commit("test author", "summary", index);
+
+        byte[] empty = {};
+        assertEquals("", commit.byteToHex(empty));
+
+        byte[] nonEmpty = { 0x00, 0x01, 0x02, 0x03 };
+        assertEquals("00010203", commit.byteToHex(nonEmpty));
+    }
+    @Test
+    void testCreateTree() throws IOException {
+        try
+        {
+            index.addBlob("index.txt");
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+         Commit commit = new Commit ("Markus", "First Commit", index);
+         index.addBlob("index");
+        assertEquals (commit.createTree(index), "da39a3ee5e6b4b0d3255bfef95601890afd80709");
+    }
+
     @Test
     void testCommit1 ()
     {
@@ -60,6 +87,16 @@ public class CommitTester {
         {
             e.printStackTrace();
         }
+    }
+     @Test
+    void testGetDate() throws IOException {
+        Calendar cal = Calendar.getInstance();
+        index.addBlob("index");
+        Commit commit = new Commit("test author", "summary", index);
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        assertEquals(commit.getDate(), sdf.format(cal.getTime()));
+
     }
     @Test
     void testCommit2 ()
@@ -152,7 +189,7 @@ public class CommitTester {
 
 
     @Test
-    void testCommitWithFileDeletionsAndEdits() {
+    void testCommitWithDeletionsAndEdits() {
         try
         {
         Commit initialCommit = new Commit ("Markus", "First Commit", index);
@@ -173,6 +210,9 @@ public class CommitTester {
         index.deleteFile("file5.txt");
         index.deleteFile("file6.txt");
         assertEquals(commit3.createTree(index), commit2.createTree(index));
+        assertEquals (initialCommit.getNextCommitSHA1(), commit3.getSHA1(), commit2.getSHA1());
+        assertEquals (commit3.getSHAofPreviousCommit(), commit2.getSHAofPreviousCommit(), initialCommit.getSHA1());
+
 
         
         }
@@ -186,44 +226,5 @@ public class CommitTester {
         }
     }
 
-    private Commit createInitialCommit() {
-        Index index = new Index();
-        try {
-            index.addBlob("file1.txt");
-            index.addBlob("file2.txt");
-            index.addBlob("file3.txt");
-            return new Commit("Initial Author", "Initial Commit", index);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    private Commit createCommitWithEdits(Commit parentCommit, String... editedFiles) {
-        Index index = new Index();
-        for (String file : editedFiles) {
-            try {
-                index.addBlob(file);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        try {
-            return new Commit(parentCommit.getSHA1(), "Author", "Edit Commit", index);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    private Commit createCommitWithDeletion(Commit parentCommit, String deletedFile) {
-        Index index = new Index();
-        try {
-            index.removeBlobs(deletedFile);
-            return new Commit(parentCommit.getSHA1(), "Author", "Delete Commit", index);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
+   
 }

@@ -39,7 +39,7 @@ public class Index {
             e.printStackTrace();
         }
         blobMap.put (originalFileName, hash);
-        File objectsFile = new File ("objects", hash);
+        File objectsFile = new File ("objects/" + hash);
         if (!objectsFile.exists())
         {
             try (PrintWriter pw = new PrintWriter (objectsFile))
