@@ -21,7 +21,7 @@ public class TreeTest {
 
     @Test
     void testAddDirectoryBasic() throws IOException {
-        File fold = new File("test1");
+        File fold = new File("objects/");
         fold.mkdirs();
         Tree tree = new Tree();
 
