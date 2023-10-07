@@ -31,7 +31,7 @@ public class TreeTest {
             fw.close();
         }
 
-        tree.addDirectory ("test1");
+        tree.addDirectory ("objects/");
         tree.save();
         assertNotNull(tree.getSHA1());
     }

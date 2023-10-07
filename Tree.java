@@ -24,6 +24,8 @@ public class Tree {
         childTrees = new ArrayList<Tree>();
         sha1 = ""; 
         treeList = new ArrayList<String>();
+        fileNameList = new HashSet<String>();
+        sha1List = new HashSet<String>();
     }
     public Tree (String fileName)
     {
@@ -32,6 +34,8 @@ public class Tree {
         sha1 = ""; 
         treeList = new ArrayList<String>();
         this.fileName = fileName;
+        fileNameList = new HashSet<String>();
+        sha1List = new HashSet<String>();
     }
 
     public void add(String indexLine) {

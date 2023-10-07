@@ -25,6 +25,45 @@ public class Commit {
     private String summary;
     private Index content;
 
+    public static void main (String [] args)
+    {
+        Index index = new Index ();
+        File file = new File ("file1.txt");
+        File file2 = new File ("file2.txt");
+        Tree dir = new Tree ("directory");
+        
+        try
+        {
+            index.addBlob ("index.txt");
+            index.addBlob ("file1.txt");
+            index.addDirectory("directory");
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+        Commit commit1 = null;
+        Commit commit2 = null;
+
+        try
+        {
+            commit1 = new Commit ("Markus", "2nd commit", index);
+            File file3 = new File ("file3.txt");
+            System.out.println (commit1.createTree(index));
+            System.out.println (commit1.getNextCommitSHA1());
+            index.addBlob ("file3");
+            commit2 = new Commit ("Markus", "3rd", index);
+            System.out.println (commit2.createTree(index));
+            System.out.println (commit2.getSHAofPreviousCommit());
+
+
+    }
+    catch (IOException e)
+    {
+        e.printStackTrace();
+    }
+}
+
     public Commit(String parentSha1, String author, String summary, Index index) throws IOException {
         shaOfPreviousCommit = parentSha1;
 
@@ -37,6 +76,11 @@ public class Commit {
         shaOfTreeObject = createTree(index);
         this.author = author;
         this.summary = summary;
+    }
+
+    public String getSHAofPreviousCommit ()
+    {
+        return shaOfPreviousCommit;
     }
 
     public void saveCommit() throws IOException {
@@ -80,6 +124,10 @@ public class Commit {
         reader.close();
         tempFile.renameTo(inputFile);
     }
+    public String getNextCommitSHA1()
+    {
+        return shaOfNextCommit;
+    }
 
     public String createTree(Index index) throws IOException {
         Tree tree = new Tree();
@@ -102,7 +150,7 @@ public class Commit {
             tree.addTreeEntry("tree",shaOfPreviousCommit,"prev_commit");
         }
         index.clearIndexFile();
-        
+        tree.save();
        return tree.calculateTreeSHA1();
     }
 
